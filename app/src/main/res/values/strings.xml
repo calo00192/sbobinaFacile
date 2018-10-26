@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">SbobinaFacile</string>
+
+    <!-- Pulsanti -->
+
+    <string name="buttonStart">Start</string>
+    <string name="buttonStop">Stop</string>
+
 </resources>
