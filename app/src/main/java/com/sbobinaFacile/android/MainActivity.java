@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.sbobinaFacile.R;
 import com.sbobinaFacile.speechRecognition.SpeechListener;
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SpeechRecognizer recognizer;
     private Button buttonStart, buttonStop;
+    private TextView textView;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //      SOVRACCARICO METODI DELLA GESTIONE DEL CICLO DI VITA
@@ -41,17 +43,24 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        recognizer = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
-        recognizer.setRecognitionListener(new SpeechListener());
-
         buttonStart = (Button) findViewById(R.id.buttonStart);
         buttonStop = (Button) findViewById(R.id.buttonStop);
+        textView = (TextView) findViewById(R.id.textDisplayer);
 
         buttonStart.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v){
                 if(recognizer != null){
                     Log.v(TAG, "Premuto pulsante di inizio registrazione");
-                    //TODO : Start recognition
+                    if(recognizer != null){
+
+                        Log.v(TAG, "Creating speech recognition intent ");
+
+                        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "it");
+
+                        Log.d(TAG, "Starting recognition");
+                        recognizer.startListening(intent);
+                    }
                 }
             }
         });
@@ -60,7 +69,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v){
                 if(recognizer != null){
                     Log.v(TAG, "Premuto pulsante di fine registrazione");
-                    //TODO : Stop recognition and visualize results
+
+                    if(recognizer != null ){
+                        Log.d(TAG, "Stopping speech recognition");
+                        recognizer.stopListening();
+                    }
                 }
             }
         });
@@ -70,6 +83,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart(){
         super.onStart();
+
+        if(SpeechRecognizer.isRecognitionAvailable(getApplicationContext())) {
+
+            Log.v(TAG, "Speech Recognition is available");
+
+            recognizer = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
+            recognizer.setRecognitionListener(new SpeechListener(this));
+        }
+        else{
+            Log.e(TAG, "Speech Recognition is not available");
+            finish();
+        }
     }
 
     @Override
@@ -80,10 +105,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop(){
         super.onStop();
+
+        if(recognizer != null){
+            recognizer.destroy();
+        }
     }
 
     @Override
     protected void onDestroy(){
         super.onDestroy();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //      METOIDI
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public TextView getDisplayer(){
+        return this.textView;
     }
 }

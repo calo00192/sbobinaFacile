@@ -1,9 +1,13 @@
 package com.sbobinaFacile.speechRecognition;
 
+import android.app.Activity;
 import android.speech.RecognitionListener;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.os.Bundle;
+
+import com.sbobinaFacile.android.MainActivity;
+
 import java.util.ArrayList;
 
 /**
@@ -12,11 +16,31 @@ import java.util.ArrayList;
 
 public class SpeechListener implements RecognitionListener {
 
+
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //      COSTANTI
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static final String TAG = "Recognition_Listener";
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //      CAMPI
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private MainActivity launchActivity;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //      COSTRUTTORE
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public SpeechListener(Activity launchActivity){
+        this.launchActivity = (MainActivity) launchActivity;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //      SOVRACCARICO METODI
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onBeginningOfSpeech(){
@@ -65,6 +89,11 @@ public class SpeechListener implements RecognitionListener {
         Log.d(TAG, "Risultato ricevuto");
         ArrayList<String> phrases =  results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
         Log.d(TAG, "Result size = " + phrases.size());
+
+        for(int i = 0; i < phrases.size(); ++i) {
+            launchActivity.getDisplayer().append(phrases.get(i));
+            launchActivity.getDisplayer().append("\n");
+        }
 
     }
 
