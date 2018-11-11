@@ -1,9 +1,11 @@
 package com.sbobinaFacile.android;
 
+import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -84,17 +86,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart(){
         super.onStart();
 
-        if(SpeechRecognizer.isRecognitionAvailable(getApplicationContext())) {
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        //      FUNZIONE DI TEST
 
-            Log.v(TAG, "Speech Recognition is available");
+        startTest();
 
-            recognizer = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
-            recognizer.setRecognitionListener(new SpeechListener(this));
-        }
-        else{
-            Log.e(TAG, "Speech Recognition is not available");
-            finish();
-        }
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+//        if(SpeechRecognizer.isRecognitionAvailable(getApplicationContext())) {
+//
+//            Log.v(TAG, "Speech Recognition is available");
+//
+//            recognizer = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
+//            recognizer.setRecognitionListener(new SpeechListener(this));
+//        }
+//        else{
+//            Log.e(TAG, "Speech Recognition is not available");
+//            finish();
+//        }
     }
 
     @Override
@@ -106,9 +115,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop(){
         super.onStop();
 
-        if(recognizer != null){
-            recognizer.destroy();
-        }
+//        if(recognizer != null){
+//            recognizer.destroy();
+//        }
     }
 
     @Override
@@ -122,5 +131,15 @@ public class MainActivity extends AppCompatActivity {
 
     public TextView getDisplayer(){
         return this.textView;
+    }
+
+    private void startTest(){
+
+        RecordingFragment rf = RecordingFragment.newInstance();
+        StatusChanger sc = new StatusChanger(rf);
+
+        rf.show(getFragmentManager(), "Recording_Fragment");
+        sc.start();
+
     }
 }

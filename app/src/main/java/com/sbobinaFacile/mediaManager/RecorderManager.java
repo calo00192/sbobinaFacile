@@ -33,58 +33,79 @@ public class RecorderManager {
     private File actualFile;
     private MediaRecorder recorder;
     private Context appContext;
-    private static int errCode = 0x0001;
+    private int errCode = 0x0001;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //      COSTRUTTORI
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public RecorderManager(){
+    public RecorderManager(Context appContext, File recordFile) throws IOException {
 
-        this.recorder = new MediaRecorder();
-        this.recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        this.recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        this.recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        this.recorder.setOutputFile(PATH_NAME);
-        this.recorder.prepare();
-    }
-
-    public RecorderManager(File mediaFile){}
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    //      METODI
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public static RecorderManager createNewRecorderManager(Context appContext) throws IOException {
-
-        try{
+        this.appContext = appContext;
 
 
+        try {
 
-        }
-        catch(IOException){
+            if(recordFile != null && recordFile.isFile()){
+                this.actualFile = recordFile;
+            }
+            else{
+                createNewFile();
+            }
 
-            switch(errCode){
+            this.recorder = new MediaRecorder();
+            this.recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            this.recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+            this.recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            this.recorder.setOutputFile(actualFile);
+            this.recorder.prepare();
 
-                case PERMISSION_DENID : {
+
+        } catch (IOException e) {
+
+            switch (errCode) {
+
+                case PERMISSION_DENID: {
                     Log.d(TAG, "User has no permission to write external storage. Request it");
                     //TODO: Richiesta permesso di accesso alla memoria esterna
                     break;
                 }
-                case MEMORY_NOT_AVAILABLE : {
+                case MEMORY_NOT_AVAILABLE: {
                     Log.d(TAG, "Memory is not available");
                     //TODO: GEstioe dell'errore
                     break;
                 }
                 default: {
-                    throw new IOException("Error in opening a new file for the recorder");
-                    break;
+                    throw e;
                 }
             }
         }
-
-
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //      METODI
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void startRecord(){
+
+        try{
+            recorder.start();
+        }
+        catch(IllegalStateException e){
+            Log.e(TAG, e.toString());
+        }
+    }
+
+    public void stopRecord(){
+
+        try{
+            recorder.stop();
+        }
+        catch(IllegalStateException e){
+            Log.e(TAG, e.toString());
+        }
+    }
+
 
     private void createNewFile() throws IOException {
 
@@ -94,8 +115,6 @@ public class RecorderManager {
             if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
 
 
-                //File root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-
                 File root = Environment.getExternalStorageDirectory();
 
                 File[] filesInRoot = root.listFiles();
@@ -104,7 +123,7 @@ public class RecorderManager {
                 File directory = null;
 
                 //Ricerco la cartella dell'app
-                for(; j < filesInRoot.length; ++i){
+                for(; j < filesInRoot.length; ++j){
 
                     if(filesInRoot[j].getName().equals(DIRECTORY_NAME)){
                         break;
@@ -122,7 +141,7 @@ public class RecorderManager {
 
                     Log.v(TAG, "Cartella non esistente. Si crea.");
 
-                    File directory = new File(root, DIRECTORY_NAME);
+                    directory = new File(root, DIRECTORY_NAME);
                     directory.mkdirs();
                 }
 
