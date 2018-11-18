@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private SpeechRecognizer recognizer;
     private Button buttonStart, buttonStop;
     private TextView textView;
+    private boolean isTestDone = false;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //      SOVRACCARICO METODI DELLA GESTIONE DEL CICLO DI VITA
@@ -86,10 +87,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart(){
         super.onStart();
 
+        Log.v(TAG, "OnStart.");
+
         ////////////////////////////////////////////////////////////////////////////////////////////
         //      FUNZIONE DI TEST
 
-        startTest();
+        if(!isTestDone) {
+            Log.d(TAG, "Inizio test.");
+            isTestDone = true;
+            startTest();
+        }
+        else{
+            Log.v(TAG, "Test completato.");
+        }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -135,11 +145,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTest(){
 
-        RecordingFragment rf = RecordingFragment.newInstance();
-        StatusChanger sc = new StatusChanger(rf);
-
-        rf.show(getFragmentManager(), "Recording_Fragment");
-        sc.start();
+        Intent startIntent = new Intent(this, RecordingActivity.class);
+        startActivity(startIntent);
 
     }
 }

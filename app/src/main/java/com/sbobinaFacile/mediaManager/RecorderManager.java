@@ -39,7 +39,15 @@ public class RecorderManager {
     //      COSTRUTTORI
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Istanzia un nuovo RecorderManager.
+     * @param appContext Context dell'app
+     * @param recordFile File su cui verrà salvata la registrazione. Se Null ne viene creato uno nuovo.
+     * @throws IOException
+     */
     public RecorderManager(Context appContext, File recordFile) throws IOException {
+
+        Log.v(TAG, "Costruttore");
 
         this.appContext = appContext;
 
@@ -47,19 +55,26 @@ public class RecorderManager {
         try {
 
             if(recordFile != null && recordFile.isFile()){
+                Log.d(TAG, "E' stato passato un file.");
                 this.actualFile = recordFile;
             }
             else{
+                Log.d(TAG, "Non è stato passato nessun file. Si crea.");
                 createNewFile();
             }
 
+            Log.v(TAG, "Inizio creazione MediaRecorder");
+
             this.recorder = new MediaRecorder();
             this.recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            this.recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-            this.recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            this.recorder.setOutputFormat(MediaRecorder.OutputFormat.AAC_ADTS);
+            this.recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
             this.recorder.setOutputFile(actualFile);
+            this.recorder.setOnErrorListener(new RecorderManager.ErrorListener());
+            this.recorder.setOnInfoListener(new RecorderManager.InfoListener());
             this.recorder.prepare();
 
+            Log.v(TAG, "MediaRecorder pronto.");
 
         } catch (IOException e) {
 
@@ -72,7 +87,7 @@ public class RecorderManager {
                 }
                 case MEMORY_NOT_AVAILABLE: {
                     Log.d(TAG, "Memory is not available");
-                    //TODO: GEstioe dell'errore
+                    //TODO: GEstioe dell'errore memoria non disponibile
                     break;
                 }
                 default: {
@@ -86,7 +101,12 @@ public class RecorderManager {
     //      METODI
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Avvia la registrazione di un nuovo audio in formato AAC
+     */
     public void startRecord(){
+
+        Log.d(TAG, "Inizio a registrare");
 
         try{
             recorder.start();
@@ -96,7 +116,12 @@ public class RecorderManager {
         }
     }
 
+    /**
+     * Stoppa la registrazione corrente
+     */
     public void stopRecord(){
+
+        Log.d(TAG, "Fermo la registrazione");
 
         try{
             recorder.stop();
@@ -106,7 +131,27 @@ public class RecorderManager {
         }
     }
 
+    public void finalizeRecord(){
 
+        Log.v(TAG, "Finalize Record");
+
+        if(recorder != null){
+
+            recorder.reset();
+            recorder.release();
+            Log.d(TAG, "Risorse associate al MediaRecorder rilasciate.");
+        }
+        else{
+            Log.e(TAG, "Chiamato metodo finalizeRecord con recorder nullo");
+        }
+    }
+
+
+    /**
+     * Crea un nuovo file per la registrazione nel caso non ne sia stato passato giù uno
+     * nel costruttore della classe
+     * @throws IOException
+     */
     private void createNewFile() throws IOException {
 
         if( ContextCompat.checkSelfPermission(appContext,
@@ -115,23 +160,27 @@ public class RecorderManager {
             if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
 
 
+                Log.v(TAG, "Inizio creazione del file di registrazione");
+
                 File root = Environment.getExternalStorageDirectory();
 
                 File[] filesInRoot = root.listFiles();
 
-                int j = -1;
+                boolean founded = false;
+                int j = 0;
                 File directory = null;
 
                 //Ricerco la cartella dell'app
                 for(; j < filesInRoot.length; ++j){
 
                     if(filesInRoot[j].getName().equals(DIRECTORY_NAME)){
+                        founded = true;
                         break;
                     }
                 }
 
                 //Caso esiste giàuna cartella
-                if(j >= 0){
+                if(founded){
 
                     Log.v(TAG, "Directory trovata in posizione " + j);
                     directory = filesInRoot[j];
@@ -149,7 +198,7 @@ public class RecorderManager {
                 Calendar calendar = Calendar.getInstance();
                //TODO: Usare i metodi di Calendar per creare il nome del file
 
-                this.actualFile = new File(directory, "20181121");
+                this.actualFile = new File(directory, "20181121.aac");
 
 
             }
@@ -163,6 +212,68 @@ public class RecorderManager {
 
             errCode = PERMISSION_DENID;
             throw new IOException();
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //      CLASSI INNESTATE
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Listener delle info del MediaRecorder
+     */
+    private class InfoListener implements MediaRecorder.OnInfoListener {
+
+        private static final String TAG = "Recorder_Info_Listener";
+
+        public void onInfo(MediaRecorder mr, int what, int extra){
+
+            switch(what){
+
+                case MediaRecorder.MEDIA_RECORDER_INFO_UNKNOWN : {
+                    //TODO : Gestione dei warnig sconosciuto
+                    Log.e(TAG, "Warning sconosciuto");
+                    break;
+                }
+                case MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED : {
+                    //TODO : Gestione del ragiungimento della durata massima di registrazione
+                    Log.e(TAG, "Raggiunta durata massima registrazione");
+                    break;
+                }
+                case MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_APPROACHING : {
+                    //TODO : Gestione dell'errore di memoria quasi piena
+                    Log.e(TAG, "Memoria quasi piena");
+                    break;
+                }
+
+            }
+        }
+    }
+
+    /**
+     * Listener degli errori del Media Recorder
+     */
+    private class ErrorListener implements MediaRecorder.OnErrorListener {
+
+        private static final String TAG = "Recorder_Error_Listener";
+
+        public void onError(MediaRecorder mr, int what, int extra){
+
+            switch(what){
+
+                case MediaRecorder.MEDIA_RECORDER_ERROR_UNKNOWN : {
+                    //TODO : Gestione degli errori sconosciuti
+                    Log.e(TAG, "Errore sconosciuto");
+                    break;
+                }
+                case MediaRecorder.MEDIA_ERROR_SERVER_DIED : {
+                    //TODO : Media server died. In this case, the application must
+                    // release the MediaRecorder object and instantiate a new one.
+                    Log.e(TAG, "Media Server Died");
+                    break;
+                }
+
+            }
         }
     }
 

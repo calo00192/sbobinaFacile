@@ -5,5 +5,7 @@
 
     <string name="buttonStart">Start</string>
     <string name="buttonStop">Stop</string>
+    <string name="title_activity_recorder_ca">RecorderCa</string>
+    <string name="title_activity_recording">RecordingActivity</string>
 
 </resources>
